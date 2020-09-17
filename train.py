@@ -67,16 +67,16 @@ if __name__ == '__main__':
     train_dataset = ToxicDataset(df=train_data, tokenizer=tokenizer)
     valid_dataset = ToxicDataset(df=valid_data, tokenizer=tokenizer)
     collate = partial(collate_function, device=device)
-    train_sampler = RandomSampler(train_data)
-    valid_sampler = RandomSampler(valid_data)
+    train_sampler = RandomSampler(train_dataset)
+    valid_sampler = RandomSampler(valid_dataset)
     train_data_iterator = DataLoader(
-        train_data,
+        train_dataset,
         batch_size=BATCH_SIZE,
         sampler=train_sampler,
         collate_fn=collate
     )
     valid_data_iterator = DataLoader(
-        valid_data,
+        valid_dataset,
         batch_size=BATCH_SIZE,
         sampler=valid_sampler,
         collate_fn=collate,
