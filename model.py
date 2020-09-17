@@ -1,15 +1,12 @@
 from torch import nn
 import torch
 
-BERT_NAME = 'bert-base-cased'
-PATH = './'
-
 
 class BertClassifier(nn.Module):
     def __init__(self, bert_model, num_classes):
-        super.__init__()
+        super().__init__()
         self.bert_model = bert_model
-        self.classifier = nn.Linear(bert.config.hidden_size, num_classes)
+        self.classifier = nn.Linear(bert_model.config.hidden_size, num_classes)
 
     def forward(self, input_ids,
                 attention_mask=None,

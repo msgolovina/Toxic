@@ -1,3 +1,4 @@
+from config import BATCH_SIZE, BERT_NAME, CLASS_COLS, NUM_EPOCHS, NUM_WARMUP_STEPS
 from dataset import ToxicDataset, collate_function
 from model import BertClassifier
 
@@ -8,14 +9,9 @@ from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 import torch
 from torch.nn import BCELoss
-from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset, DataLoader, RandomSampler
 from tqdm import tqdm, trange
 from transformers import BertTokenizer, BertModel, AdamW, get_linear_schedule_with_warmup
-
-CLASS_COLS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
-BATCH_SIZE=4
-BERT_NAME='bert-base-cased'
 
 
 def train(model, data_iterator, criterion, optimizer, scheduler):
@@ -101,8 +97,6 @@ if __name__ == '__main__':
         }
     ]
 
-    NUM_EPOCHS = 2
-    NUM_WARMUP_STEPS = 10 ** 3
     total_steps = len(train_data_iterator) * NUM_EPOCHS - NUM_WARMUP_STEPS
 
     optimizer = AdamW(optimizer_params, lr=2e-5, eps=1e-8)

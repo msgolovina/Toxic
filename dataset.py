@@ -1,10 +1,9 @@
+from config import COMMENT_COL, CLASS_COLS
+
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
-
-COMMENT_COL = 'comment_text'
-CLASS_COLS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
 
 
 class ToxicDataset(Dataset):
@@ -15,13 +14,13 @@ class ToxicDataset(Dataset):
         self.features = []
         self.targets = []
         for i, (row) in tqdm(df.iterrows()):
-            feature, target = self.to_tensor(self.tokenizer, row)
+            feature, target = self.to_tensor(row, self.tokenizer)
             self.features.append(feature)
             self.targets.append(target)
 
     @staticmethod
     def to_tensor(row, tokenizer):
-        tokens = tokenizer.encode(row[COMMENT_COL], add_special_tokens=True)
+        tokens = tokenizer.encode(row[COMMENT_COL], add_special_tokens=True, max_length=512)
         if len(tokens) > 120:
             tokens = tokens[:119] + [tokens[-1]]
         feature = torch.LongTensor(tokens)
