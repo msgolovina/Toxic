@@ -112,8 +112,6 @@ if __name__ == '__main__':
         optimizer, config.NUM_WARMUP_STEPS, total_steps
     )
 
-    # training
-
     for i in range(config.NUM_EPOCHS):
         print('='*50, f'EPOCH {i}', '='*50)
         train(model, train_data_iterator, criterion, optimizer, scheduler)
