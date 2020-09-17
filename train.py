@@ -1,4 +1,5 @@
-from config import BATCH_SIZE, BERT_NAME, CLASS_COLS, NUM_EPOCHS, NUM_WARMUP_STEPS
+from config import BATCH_SIZE, BERT_NAME, \
+    CLASS_COLS, NUM_EPOCHS, NUM_WARMUP_STEPS
 from dataset import ToxicDataset, collate_function
 from model import BertClassifier
 
@@ -11,7 +12,8 @@ import torch
 from torch.nn import BCELoss
 from torch.utils.data import Dataset, DataLoader, RandomSampler
 from tqdm import tqdm, trange
-from transformers import BertTokenizer, BertModel, AdamW, get_linear_schedule_with_warmup
+from transformers import BertTokenizer, BertModel, AdamW, \
+    get_linear_schedule_with_warmup
 
 
 def train(model, data_iterator, criterion, optimizer, scheduler):
@@ -27,6 +29,7 @@ def train(model, data_iterator, criterion, optimizer, scheduler):
         optimizer.step()
         scheduler.step()
     print(f'Train loss: {total_loss / len(data_iterator)}')
+
 
 def evaluate(model, data_iterator, criterion):
     model.eval()
@@ -60,26 +63,28 @@ if __name__ == '__main__':
 
     train_data = pd.read_csv('data/train.csv')
     train_data, valid_data = train_test_split(train_data, test_size=0.05)
-
     tokenizer = BertTokenizer.from_pretrained(BERT_NAME)
-
     train_dataset = ToxicDataset(df=train_data, tokenizer=tokenizer)
     valid_dataset = ToxicDataset(df=valid_data, tokenizer=tokenizer)
-
     collate = partial(collate_function, device=device)
-
     train_sampler = RandomSampler(train_data)
     valid_sampler = RandomSampler(valid_data)
-
-    train_data_iterator = DataLoader(train_data, batch_size=BATCH_SIZE,
-                                     sampler=train_sampler, collate_fn=collate)
-    valid_data_iterator = DataLoader(valid_data, batch_size=BATCH_SIZE,
-                                     sampler = valid_sampler, collate_fn=collate)
+    train_data_iterator = DataLoader(
+        train_data,
+        batch_size=BATCH_SIZE,
+        sampler=train_sampler,
+        collate_fn=collate
+    )
+    valid_data_iterator = DataLoader(
+        valid_data,
+        batch_size=BATCH_SIZE,
+        sampler=valid_sampler,
+        collate_fn=collate,
+    )
 
     criterion = BCELoss()
 
     no_decay = ['bias', 'LayerNorm.weight']
-
     optimizer_params = [
         {
             'weight_decay': 0.0,
@@ -100,20 +105,15 @@ if __name__ == '__main__':
     total_steps = len(train_data_iterator) * NUM_EPOCHS - NUM_WARMUP_STEPS
 
     optimizer = AdamW(optimizer_params, lr=2e-5, eps=1e-8)
-    scheduler = get_linear_schedule_with_warmup(optimizer, NUM_WARMUP_STEPS, total_steps)
-
-    train_iterator = trange(
-        0,
-        NUM_EPOCHS,
-        desc='Epoch',
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer, NUM_WARMUP_STEPS, total_steps
     )
 
-    for iteration in train_iterator:
-        epoch_iterator = tqdm(
-            train_data_iterator,
-            desc='Iteration',
-        )
-        train(model, epoch_iterator, criterion, optimizer, scheduler)
+    # training
+
+    for i in range(NUM_EPOCHS):
+        print('='*50, f'EPOCH {i}', '='*50)
+        train(model, train_data_iterator, criterion, optimizer, scheduler)
         evaluate(model, valid_data_iterator, criterion)
 
     model_to_save = model.module if hasattr(model, 'module') else model

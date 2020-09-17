@@ -1,9 +1,9 @@
 from config import COMMENT_COL, CLASS_COLS
 
-from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset
 from torch.nn.utils.rnn import pad_sequence
+from tqdm import tqdm
 
 
 class ToxicDataset(Dataset):
@@ -20,7 +20,12 @@ class ToxicDataset(Dataset):
 
     @staticmethod
     def to_tensor(row, tokenizer):
-        tokens = tokenizer.encode(row[COMMENT_COL], add_special_tokens=True, max_length=512)
+        tokens = tokenizer.encode(
+            row[COMMENT_COL],
+            add_special_tokens=True,
+            max_length=512,
+            truncation=True
+        )
         if len(tokens) > 120:
             tokens = tokens[:119] + [tokens[-1]]
         feature = torch.LongTensor(tokens)
@@ -40,5 +45,3 @@ def collate_function(batch, device):
     target = torch.stack(target)
 
     return feature.to(device), target.to(device)
-
-
