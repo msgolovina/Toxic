@@ -1,5 +1,4 @@
-from config import BATCH_SIZE, BERT_NAME, \
-    CLASS_COLS, NUM_EPOCHS, NUM_CLASSES, NUM_WARMUP_STEPS
+import config
 from dataset import ToxicDataset, collate_function
 from model import BertClassifier
 
@@ -46,7 +45,7 @@ def evaluate(model, data_iterator, criterion):
             y_pred += outputs.cpu().numpy().tolist()
         y_true = np.array(y_true)
         y_pred = np.array(y_pred)
-        for i, class_col in enumerate(CLASS_COLS):
+        for i, class_col in enumerate(config.CLASS_COLS):
             class_roc_auc = roc_auc_score(y_true[:, i], y_pred[:, i])
             print(f'{class_col} ROC AUC: {class_roc_auc}')
         print(f'Evaluation loss: {total_loss / len(data_iterator)}')
@@ -59,14 +58,14 @@ if __name__ == '__main__':
     else:
         device = torch.device('cpu')
 
-    bert_config = BertConfig.from_pretrained(BERT_NAME)
-    bert_config.num_labels = NUM_CLASSES
-    model = BertClassifier.from_pretrained(BERT_NAME, bert_config)
+    bert_config = BertConfig.from_pretrained(config.BERT_NAME)
+    bert_config.num_labels = config.NUM_CLASSES
+    model = BertClassifier.from_pretrained(config.BERT_NAME, bert_config)
     model.to(device)
 
     train_data = pd.read_csv('data/train.csv')
     train_data, valid_data = train_test_split(train_data, test_size=0.05)
-    tokenizer = BertTokenizer.from_pretrained(BERT_NAME)
+    tokenizer = BertTokenizer.from_pretrained(config.BERT_NAME)
     train_dataset = ToxicDataset(df=train_data, tokenizer=tokenizer)
     valid_dataset = ToxicDataset(df=valid_data, tokenizer=tokenizer)
     collate = partial(collate_function, device=device)
@@ -74,13 +73,13 @@ if __name__ == '__main__':
     valid_sampler = RandomSampler(valid_dataset)
     train_data_iterator = DataLoader(
         train_dataset,
-        batch_size=BATCH_SIZE,
+        batch_size=config.BATCH_SIZE,
         sampler=train_sampler,
         collate_fn=collate
     )
     valid_data_iterator = DataLoader(
         valid_dataset,
-        batch_size=BATCH_SIZE,
+        batch_size=config.BATCH_SIZE,
         sampler=valid_sampler,
         collate_fn=collate,
     )
@@ -105,16 +104,17 @@ if __name__ == '__main__':
         }
     ]
 
-    total_steps = len(train_data_iterator) * NUM_EPOCHS - NUM_WARMUP_STEPS
+    total_steps = len(train_data_iterator) * config.NUM_EPOCHS - \
+                  config.NUM_WARMUP_STEPS
 
     optimizer = AdamW(optimizer_params, lr=2e-5, eps=1e-8)
     scheduler = get_linear_schedule_with_warmup(
-        optimizer, NUM_WARMUP_STEPS, total_steps
+        optimizer, config.NUM_WARMUP_STEPS, total_steps
     )
 
     # training
 
-    for i in range(NUM_EPOCHS):
+    for i in range(config.NUM_EPOCHS):
         print('='*50, f'EPOCH {i}', '='*50)
         train(model, train_data_iterator, criterion, optimizer, scheduler)
         evaluate(model, valid_data_iterator, criterion)
