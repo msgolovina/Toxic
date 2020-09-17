@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     bert_config = BertConfig.from_pretrained(BERT_NAME)
     bert_config.num_labels = NUM_CLASSES
-    model = BertClassifier.from_pretrained(BERT_NAME, NUM_CLASSES, bert_config)
+    model = BertClassifier.from_pretrained(BERT_NAME, bert_config)
     model.to(device)
 
     train_data = pd.read_csv('data/train.csv')
