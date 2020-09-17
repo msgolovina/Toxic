@@ -1,12 +1,14 @@
 import torch
 from torch import nn
+from transformers import BertModel, BertPreTrainedModel
 
 
-class BertClassifier(nn.Module):
-    def __init__(self, bert_model, num_classes):
-        super().__init__()
-        self.bert_model = bert_model
-        self.classifier = nn.Linear(bert_model.config.hidden_size, num_classes)
+class BertClassifier(BertPreTrainedModel):
+    def __init__(self, num_classes, config):
+        super(BertClassifier, self).__init__(config)
+        self.bert_model = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.classifier = nn.Linear(config.hidden_size, num_classes)
 
     def forward(
             self,

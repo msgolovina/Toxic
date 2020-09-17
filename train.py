@@ -1,5 +1,5 @@
 from config import BATCH_SIZE, BERT_NAME, \
-    CLASS_COLS, NUM_EPOCHS, NUM_WARMUP_STEPS
+    CLASS_COLS, NUM_EPOCHS, NUM_CLASSES, NUM_WARMUP_STEPS
 from dataset import ToxicDataset, collate_function
 from model import BertClassifier
 
@@ -12,7 +12,7 @@ import torch
 from torch.nn import BCELoss
 from torch.utils.data import Dataset, DataLoader, RandomSampler
 from tqdm import tqdm, trange
-from transformers import BertTokenizer, BertModel, AdamW, \
+from transformers import BertConfig, BertTokenizer, AdamW, \
     get_linear_schedule_with_warmup
 
 
@@ -59,7 +59,10 @@ if __name__ == '__main__':
     else:
         device = torch.device('cpu')
 
-    model = BertClassifier(BertModel.from_pretrained(BERT_NAME), 6).to(device)
+    bert_config = BertConfig.from_pretrained(BERT_NAME)
+    bert_config.num_labels = NUM_CLASSES
+    model = BertClassifier.from_pretrained(BERT_NAME, NUM_CLASSES, bert_config)
+    model.to(device)
 
     train_data = pd.read_csv('data/train.csv')
     train_data, valid_data = train_test_split(train_data, test_size=0.05)
