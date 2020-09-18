@@ -53,22 +53,17 @@ def evaluate(model, data_iterator, criterion):
 
 if __name__ == '__main__':
 
-    if torch.cuda.is_available:
-        device = torch.device('cuda:6')
-    else:
-        device = torch.device('cpu')
-
     bert_config = BertConfig.from_pretrained(config.BERT_NAME)
     bert_config.num_labels = config.NUM_CLASSES
     model = BertClassifier.from_pretrained(config.BERT_NAME, bert_config)
-    model.to(device)
+    model.to(config.DEVICE)
 
     train_data = pd.read_csv('data/train.csv')
     train_data, valid_data = train_test_split(train_data, test_size=0.05)
     tokenizer = BertTokenizer.from_pretrained(config.BERT_NAME)
     train_dataset = ToxicDataset(df=train_data, tokenizer=tokenizer)
     valid_dataset = ToxicDataset(df=valid_data, tokenizer=tokenizer)
-    collate = partial(collate_function, device=device)
+    collate = partial(collate_function, device=config.DEVICE)
     train_sampler = RandomSampler(train_dataset)
     valid_sampler = RandomSampler(valid_dataset)
     train_data_iterator = DataLoader(
@@ -96,7 +91,7 @@ if __name__ == '__main__':
             ]
         },
         {
-            'weight_decay': 0.01,
+            'weight_decay': config.WEIGHT_DECAY,
             'params': [
                 param for name, param in model.named_parameters()
                 if not any(nd in name for nd in no_decay)
@@ -107,7 +102,7 @@ if __name__ == '__main__':
     total_steps = len(train_data_iterator) * config.NUM_EPOCHS - \
                   config.NUM_WARMUP_STEPS
 
-    optimizer = AdamW(optimizer_params, lr=2e-5, eps=1e-8)
+    optimizer = AdamW(optimizer_params, lr=config.LR, eps=config.ADAM_EPSILON)
     scheduler = get_linear_schedule_with_warmup(
         optimizer, config.NUM_WARMUP_STEPS, total_steps
     )
@@ -118,5 +113,5 @@ if __name__ == '__main__':
         evaluate(model, valid_data_iterator, criterion)
 
     model_to_save = model.module if hasattr(model, 'module') else model
-    model_to_save.save_pretrained('trained_model')
-    tokenizer.save_pretrained('trained_model')
+    model_to_save.save_pretrained(config.MODEL_DIR)
+    tokenizer.save_pretrained(config.MODEL_DIR)

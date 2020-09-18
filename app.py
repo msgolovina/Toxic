@@ -58,4 +58,4 @@ if __name__ == '__main__':
     MODEL.load_state_dict(torch.load(config.TRAINED_MODEL_PATH))
     MODEL.to(config.DEVICE)
     MODEL.eval()
-    app.run(host='0.0.0.0', port='6006')
+    app.run(host=config.HOST, port=config.PORT)
